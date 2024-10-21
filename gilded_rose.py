@@ -62,7 +62,7 @@ class Constant:
     def __init__(self, v):
         self.v = v
 
-    def __call__(self, _):
+    def __call__(self, *args, **kwargs):
         return self.v
 
     def __repr__(self):
