@@ -21,7 +21,7 @@ class Pipe:
         yield from self.tail
 
     def __repr__(self):
-        return '[' + '; '.join(str(f) for f in self) + ']'
+        return '(pipe ' + ' '.join(str(f) for f in self) + ')'
 
 
 class BindRight:
@@ -33,7 +33,7 @@ class BindRight:
         return self.op(*args, *self.bound_args)
 
     def __repr__(self):
-        return f'{self.op.__name__}(' + ', '.join(str(a) for a in self.bound_args) + ')'
+        return f'({self.op.__name__} ' + ' '.join(str(a) for a in self.bound_args) + ')'
 
 
 class Clamp:
@@ -44,7 +44,7 @@ class Clamp:
         return max(min(arg, self.maximum), self.minimum)
 
     def __repr__(self):
-        return f'clamp({self.minimum}, {self.maximum})'
+        return f'(clamp {self.minimum} {self.maximum})'
 
 
 class Identity:
@@ -66,7 +66,7 @@ class Constant:
         return self.v
 
     def __repr__(self):
-        return f'constant({self.v})'
+        return f'(constant {self.v})'
 
 
 clamp_quality = Clamp(0, 50)
@@ -154,7 +154,8 @@ DEFAULT_FACTORY = DefaultFactory(on_positive_sell_in=add(-1), on_non_positive_se
 def printing_transformer(transformer: Transformer) -> Transformer:
     def result(value: int) -> int:
         new_value = transformer(value)
-        print(f'({value}) -[ {transformer} ]-> ({new_value})')
+        diff = new_value - value
+        print(f'{transformer}: {value} -> {new_value} (Δ={diff:+d})')
         return new_value
 
     return result
