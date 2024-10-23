@@ -76,7 +76,7 @@ def clamped(transformer: Transformer) -> Transformer:
     return Pipe(transformer, clamp_quality)
 
 
-def add(n):
+def add(n) -> Transformer:
     return BindRight(operator.add, n)
 
 
@@ -103,7 +103,7 @@ class Factory(ABC):
         return str(type(self))
 
 
-class SulfurasFactory(Factory):
+class ImmutableFactory(Factory):
     def sell_in_transformer(self, item: Item) -> Transformer:
         return identity
 
@@ -142,7 +142,7 @@ SULFURAS = "Sulfuras, Hand of Ragnaros"
 CONJURED = "Conjured Mana Cake"
 
 TRANSFORMER_FACTORIES = {
-    SULFURAS: SulfurasFactory(),
+    SULFURAS: ImmutableFactory(),
     AGED_BRIE: DefaultFactory(on_positive_sell_in=add(+1), on_non_positive_sell_in=add(+2)),
     BACKSTAGE_PASS: BackstagePassFactory(),
     CONJURED: DefaultFactory(on_positive_sell_in=add(-2), on_non_positive_sell_in=add(-4)),
@@ -152,10 +152,18 @@ DEFAULT_FACTORY = DefaultFactory(on_positive_sell_in=add(-1), on_non_positive_se
 
 
 def printing_transformer(transformer: Transformer) -> Transformer:
+    def format_diff(diff: int) -> str:
+        if diff > 0:
+            return f'⬆️{diff}'
+        elif diff < 0:
+            return f'⬇️{-diff}'
+        else:
+            return f'➡️{0}'
+
     def result(value: int) -> int:
         new_value = transformer(value)
         diff = new_value - value
-        print(f'{transformer}: {value} -> {new_value} (Δ={diff:+d})')
+        print(f'{transformer}: {value} -> {new_value} {format_diff(diff)}')
         return new_value
 
     return result
@@ -166,8 +174,7 @@ def update_item(item: Item) -> None:
     transform_sell_in, transform_quality = factory.transformers(item)
 
     if False:
-        transform_sell_in, transform_quality = tuple(
-            printing_transformer(t) for t in (transform_sell_in, transform_quality))
+        transform_quality = printing_transformer(transform_quality)
 
     item.sell_in = transform_sell_in(item.sell_in)
     item.quality = transform_quality(item.quality)
